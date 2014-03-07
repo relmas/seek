@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<!--[if IEMobile 7 ]> <html class="no-js iem7"> <![endif]-->
+<!--[if (gt IEMobile 7)|!(IEMobile)]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <title>Bubble Hit</title>
+    <meta name="description" content="Bubble Hit - Pop bubbles to clear the board!">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, user-scalable=no, maximum-scale=1.0"/>
+    <meta http-equiv="cleartype" content="on">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/touch/apple-touch-icon-144x144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/touch/apple-touch-icon-114x114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/touch/apple-touch-icon-72x72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="img/touch/apple-touch-icon-57x57-precomposed.png">
+    <link rel="shortcut icon" href="img/touch/apple-touch-icon.png">
+    <!-- Home Screen (SpringBoard) audio playback forces hard reset to quit app
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Bubble Hit">
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #9a55e0;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            -webkit-user-select: none;
+            padding-bottom: 88px;
+        }
+
+        #container {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #loading {
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        #logo {
+            position: absolute;
+        }
+
+        #loading_frame {
+            position: absolute;
+        }
+
+        #loading_fill {
+            position: absolute;
+        }
+
+    </style>
+    <script src="js/modernizr.custom.54194.js"></script>
+	
+</head>
+<body>
+
+<div id="loading" style="display: block">
+    <div id="logo"></div>
+    <div id="loading_animation">
+        <div id="loading_frame"></div>
+        <div id="loading_fill"></div>
+    </div>
+</div>
+<div id="container" style="display: none"></div>
+
+<script src="js/helper.js"></script>
+<script data-main="js/main-built_jso.js" src="js/require.js"></script>
+<script>
+   if (navigator.userAgent.match(/iPhone/i)) {
+        MBP.scaleFix();
+        MBP.hideUrlBarOnLoad();
+   }
+
+    BHLoader = {
+
+        loadingProgress: function(percent) {
+            var frame = document.getElementById('loading_frame');
+            var fill = document.getElementById('loading_fill');
+            fill.style.width = (percent * parseInt(frame.style.width) * percent) + 'px';
+        },
+
+        loadingComplete: function(game) {
+            var loading = document.getElementById('loading');
+            var container = document.getElementById('container');
+
+            loading.style.display = 'none';
+            container.style.display = 'block';
+        }
+    };
+
+    (function() {
+
+        function changeOrientation(width,scale){
+            //first reset
+            var viewportmeta = document.querySelector('meta[name="viewport"]');
+            viewportmeta.content = 'width='+width+', minimum-scale='+scale+', maximum-scale='+scale+', initial-scale='+scale;
+        }
+        var counter = 0;
+        var rescale = function(){
+            //console.log('rescale');
+
+            if(counter == 20){
+                return;
+            }
+            //reset the viewport to 1
+            var viewportmeta = document.querySelector('meta[name="viewport"]');
+            viewportmeta.content = 'width=device-width, minimum-scale=1, maximum-scale=1, initial-scale=1';
+
+            //eturn;
+            var actualWidth = window.innerWidth,
+                    actualHeight = window.innerHeight;
+            //console.log(actualHeight);
+            if (!navigator.userAgent.match(/iPad/i)) {
+                actualWidth = window.innerWidth;
+                actualHeight = window.innerHeight;
+            }
+            //alert(actualHeight);
+            var kDefaultWidth = 1536;
+            var kDefaultHeight = 2008;
+            var devicePixelRatio = window.devicePixelRatio || 1;
+
+            var resScale = {
+                'r1': 0.2,
+                'r2': 0.3,
+                'r2_5': 0.4,
+                'r3': 0.5,
+                'r4': 0.75,
+                'r4_5': 1
+            };
+
+            var getResClass = function() {
+                var width = actualWidth * devicePixelRatio;
+                var height = actualHeight * devicePixelRatio;
+                var twidth = kDefaultWidth - 2;
+
+                if (width >= twidth) {
+                    return "r4_5";
+                }
+                else if (width >= (twidth * 0.75)) {
+                    return "r4";
+                }
+                else if (width >= (twidth * 0.5)) {
+                    return "r3";
+                }
+                else if (width >= (twidth * 0.4)) {
+                    return "r2_5";
+                }
+                else if (width >= (twidth * 0.3)) {
+                    return "r2";
+                }
+                else {
+                    return "r1";
+                }
+            };
+
+            var resClass = getResClass();
+
+
+            var sx = actualWidth / (kDefaultWidth * resScale[resClass] / devicePixelRatio);
+            var sy = actualHeight / (kDefaultHeight * resScale[resClass] / devicePixelRatio);
+            var scale = Math.min(sx, sy);
+
+            if (navigator.userAgent.match(/iPhone/i))
+                scale = sx;
+
+            var viewportmeta = document.querySelector('meta[name="viewport"]');
+            if (viewportmeta) {
+
+                var width = actualWidth / scale;
+                changeOrientation(width,scale);
+            }
+
+
+            var containerDiv = document.getElementById('container');
+            var mt = ((actualHeight - (kDefaultHeight * resScale[resClass] / devicePixelRatio)) / 4);
+            if (mt < 0) mt = 0;
+            //containerDiv.style.marginTop = mt + 'px';
+            containerDiv.style.width = (kDefaultWidth * resScale[resClass] / devicePixelRatio) + 'px';
+            containerDiv.style.height =(kDefaultHeight * resScale[resClass] / devicePixelRatio) + 'px';
+
+            document.getElementsByTagName('body')[0].style.height = actualHeight + 'px';
+
+            function sizeAndPosition(id, resClass, top, left, width, height, image, bgWidth, bgHeight) {
+                var scale = resScale[resClass] / (window.devicePixelRatio || 1);
+                var el = document.getElementById(id);
+
+                el.style.top = (top * scale) + 'px';
+                el.style.left = (left * scale) + 'px';
+                el.style.width = (width * scale) + 'px';
+                el.style.height = (height * scale) + 'px';
+                el.style.background = 'url(assets/' + resClass + '/' + image + ') 0 0 repeat-y';
+                el.style.backgroundSize = (bgWidth * scale) + 'px' + ' ' + (bgHeight * scale) + 'px';
+            }
+
+            var loadingDiv = document.getElementById('loading');
+            loadingDiv.style.marginTop = ((actualHeight - (kDefaultHeight * resScale[resClass] / devicePixelRatio)) / 2) + 'px';
+            loadingDiv.style.width = (kDefaultWidth * resScale[resClass] / devicePixelRatio) + 'px';
+            loadingDiv.style.height = (kDefaultHeight * resScale[resClass] / devicePixelRatio) + 'px';
+
+            sizeAndPosition('logo', resClass, 200, (kDefaultWidth - 947) / 2, 947, 716, 'logo_large.png', 947, 716);
+            sizeAndPosition('loading_frame', resClass, 984, (kDefaultWidth - 1024) / 2, 1024, 56, 'loading_bar_frame.png', 1024, 56);
+            sizeAndPosition('loading_fill', resClass, 984, (kDefaultWidth - 1024) / 2, 0, 56, 'loading_bar_marker.png', 1024, 56);
+
+            if (navigator.userAgent.match(/iPhone/i)) {
+                MBP.hideUrlBar();
+            }
+
+        }
+
+        setTimeout(function() {
+            rescale();
+            var width=0,height=0;
+            window.addEventListener('resize', function(){
+                //screen is NOT rotated just some in page rotation
+                //skip everything
+                counter++;
+                /**
+                 * this also stop the never ending resize loop
+                 */
+                if(height == window.innerHeight && width == window.innerWidth){
+                    return;
+                }
+                width = window.innerWidth;
+                height = window.innerHeight;
+                rescale();
+            }, false);
+        },300);
+
+    })();
+</script>
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-44071361-1', 'spilgames.com');
+	ga('send', 'pageview');
+</script>		
+</body>
+</html>
